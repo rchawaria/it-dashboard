@@ -2,7 +2,8 @@ name: CI - Docker Build & Test
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
   build:
@@ -18,9 +19,18 @@ jobs:
       - name: Build Docker image
         run: docker build ./app -t it-dashboard:latest
 
-      - name: Test container startup
+      - name: Run container
         run: |
           docker run -d -p 5000:5000 --name test-app it-dashboard:latest
-          sleep 5
-          docker logs test-app
-          docker stop test-app
+          sleep 10
+
+      - name: Test application health endpoint
+        run: curl http://localhost:5000/health
+
+      - name: Show container logs
+        run: docker logs test-app
+
+      - name: Stop and remove container
+        if: always()
+        run: docker rm -f test-app || true 
+        
